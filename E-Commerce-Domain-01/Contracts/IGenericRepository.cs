@@ -21,5 +21,7 @@ namespace E_Commerce.Domain.Contracts
         void Update(TEntity entity);
 
         void Remove(TEntity entity);
+
+        Task<int> CountAsync(ISpecifications<TEntity, TKey> Spec, CancellationToken ct = default);
     }
 }
