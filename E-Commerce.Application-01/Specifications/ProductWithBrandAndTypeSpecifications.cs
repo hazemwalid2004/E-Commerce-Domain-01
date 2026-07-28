@@ -18,8 +18,31 @@ namespace E_Commerce.Application_01.Specifications
         {
             AddInclude(P => P.ProductBrand);
             AddInclude(P => P.ProductType);
-        }
+            switch (queryParams.Sort)
+            {
+                case ProductSortingOptions.NameAsc:
+                    AddOrderBy(P => P.Name);
+                    break;
 
+                case ProductSortingOptions.NameDesc:
+                    AddOrderDescBy(P => P.Name);
+                    break;
+
+                case ProductSortingOptions.PriceAsc:
+                    AddOrderBy(P => P.Price);
+                    break;
+
+                case ProductSortingOptions.PriceDesc:
+                    AddOrderDescBy(P => P.Price);
+                    break;
+
+                default:
+                    AddOrderBy(P => P.Id);
+                    break;
+            }
+            ApplyPagination(queryParams.PageSize, queryParams.PageIndex);
+        }
+        //get by id
         public ProductWithBrandAndTypeSpecifications(int id):base(x=>x.Id ==id) 
         {
             AddInclude(P => P.ProductBrand);
