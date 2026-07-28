@@ -2,6 +2,7 @@
 using E_Commerce.Application_01.Common;
 using E_Commerce.Application_01.Contracts;
 using E_Commerce.Application_01.DTOS.Products;
+using E_Commerce.Application_01.Specifications;
 using E_Commerce.Domain.Contracts;
 using E_Commerce.Domain.Entities.Products;
 using System;
@@ -23,10 +24,11 @@ namespace E_Commerce.Application_01.Services
             _mapper = mapper;
         }
 
-        public async Task<Result<IReadOnlyList<ProductDto>>> GetAllProductsAsync(CancellationToken ct = default)
+        public async Task<Result<IReadOnlyList<ProductDto>>> GetAllProductsAsync(ProductQueryParams queryParams , CancellationToken ct = default)
         {
+            var Spec = new ProductWithBrandAndTypeSpecifications(queryParams);
             var Repo = _unitOfWork.GetRepository<Products, int>();
-            var products = await Repo.GetAllAsync(ct);
+            var products = await Repo.GetAllAsync(Spec,ct);
             var Data = _mapper.Map<IReadOnlyList<ProductDto>>(products);
 
             return Result<IReadOnlyList<ProductDto>>.Ok(Data);
@@ -34,6 +36,7 @@ namespace E_Commerce.Application_01.Services
 
         public async Task<Result<ProductDto>> GetProductAsync(int id, CancellationToken ct = default)
         {
+            var Spec = new ProductWithBrandAndTypeSpecifications(id);
             var product = await _unitOfWork.GetRepository<Products, int>().GetByIdAsync(id, ct);
 
             if (product is null)
