@@ -7,6 +7,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using E_Commerce.Domain.Contracts;
+using E_Commerce.Infrastructure_01.Seeding;
+using E_Commerce.Infrastructure_01.Repositories;
 
 
 namespace E_Commerce.Infrastructure_01
@@ -19,6 +22,8 @@ namespace E_Commerce.Infrastructure_01
             {
                 options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"));
             });
+            services.AddKeyedScoped<IDataSeeder, CatalogDataSeeder>("Catalog");
+            services.AddScoped<IUnitOfWork, UnitOfWork>();
 
             return services;
         }
