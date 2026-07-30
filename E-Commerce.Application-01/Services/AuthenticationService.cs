@@ -20,6 +20,46 @@ namespace E_Commerce.Application_01.Services
             _tokenService = tokenService;
 
         }
+
+        public async Task<Result<bool>> CheckEmailAsync(string email, CancellationToken ct = default)
+        => await _identityService.EmailExistsAsync(email, ct);
+
+        public async Task<Result<UserDto>> GetCurrentUserAsync(string email, CancellationToken ct = default)
+        {
+            var result = await _identityService.FindByEmailAsync(email, ct);
+
+            if (!result.IsSuccess)
+                return Result<UserDto>.Fail(result.Errors);
+
+            var user = result.data;
+
+            var rolesResult = await _identityService.GetRolesAsync(email, ct);
+
+            if (!rolesResult.IsSuccess)
+                return Result<UserDto>.Fail(rolesResult.Errors);
+
+            var roles = rolesResult.data;
+
+            var token = _tokenService.CreateToken(user.Id, user.Email, user.UserName, roles);
+
+            return new UserDto
+            {
+                DisplayName = user.DisplayName,
+                Email = user.Email,
+                Token = token
+            };
+        }
+
+        public async Task<Result<AddressDto>> GetUserAddressAsync(string email, CancellationToken ct = default)
+        {
+            var result = await _identityService.GetAddressByEmailAsync(email, ct);
+
+            if (!result.IsSuccess)
+                return Result<AddressDto>.Fail(result.Errors);
+
+            return result.data;
+        }
+
         public async Task<Result<UserDto>> LoginAsync(LoginDto loginDto, CancellationToken ct = default)
         {
             //Get User By Email
@@ -34,11 +74,23 @@ namespace E_Commerce.Application_01.Services
             if (!passwordResult.IsSuccess)
                 return Result<UserDto>.Fail(Error.Unauthorized("Invalid Email Or Password"));
 
+
+
+            var rolesResult = await _identityService.GetRolesAsync(loginDto.Email, ct);
+
+            if (!rolesResult.IsSuccess)
+                return Result<UserDto>.Fail(rolesResult.Errors);
+
+            var roles = rolesResult.data;
+            var user = userResult.data;
+
+            var token = _tokenService.CreateToken(user.Id, user.Email, user.UserName, roles);
+
             return new UserDto
             {
-                Email = userResult.data.Email,
-                DisplayName = userResult.data.DisplayName,
-                Token = "Token"
+                DisplayName = user.DisplayName,
+                Email = user.Email,
+                Token = token
             };
         }
 
@@ -58,5 +110,8 @@ namespace E_Commerce.Application_01.Services
                 Token = "Token"
             };
         }
+
+        public async Task<Result<AddressDto>> UpdateUserAddressAsync(AddressDto addressDto, string email, CancellationToken ct = default)
+        => await _identityService.UpdateAddressAsync(email, addressDto, ct);
     }
 }
